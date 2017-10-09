@@ -7,3 +7,4 @@ packrat/src/
 *.csv
 *.tsv
 *.pdf
+*.html
