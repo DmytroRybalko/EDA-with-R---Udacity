@@ -12,7 +12,7 @@ Notes:
 Notes:
 
 ```{r Pseudo-Facebook User Data}
-
+pf <- read.csv("/home/dmytro/Documents/DataVizPath/EDA-with-R---Udacity/eda-course-materials/lesson3/pseudo_facebook.tsv", sep = '\t')
 ```
 
 ***
@@ -21,8 +21,14 @@ Notes:
 Notes:
 
 ```{r Histogram of Users\' Birthdays}
-install.packages('ggplot2')
 library(ggplot2)
+library(ggthemes)
+
+names(pf)
+
+ggplot(aes(x = dob_day), data = pf) +
+    geom_histogram(binwidth = 1) + 
+    scale_x_continuous(breaks = 1:31)
 ```
 
 ***
@@ -61,7 +67,10 @@ Notes:
 Notes:
 
 ```{r Faceting}
-
+ggplot(aes(x = dob_day), data = pf) +
+    geom_histogram(binwidth = 1) + 
+    scale_x_continuous(breaks = 1:31) + 
+    facet_wrap(~dob_month)
 ```
 
 #### Let’s take another look at our plot. What stands out to you here?
@@ -87,7 +96,7 @@ Notes:
 #### What code would you enter to create a histogram of friend counts?
 
 ```{r Friend Count}
-
+qplot(x = friend_count, data = pf)
 ```
 
 #### How is this plot similar to Moira's first plot?
@@ -99,7 +108,8 @@ Response:
 Notes:
 
 ```{r Limiting the Axes}
-
+qplot(x = friend_count, data = pf, binwidth = 25) + 
+    scale_x_continuous(limits = c(0, 1000), breaks = seq(0, 1000, 50))
 ```
 
 ### Exploring with Bin Width
@@ -116,7 +126,8 @@ Notes:
 # Add it to the code below.
 qplot(x = friend_count, data = pf, binwidth = 10) +
   scale_x_continuous(limits = c(0, 1000),
-                     breaks = seq(0, 1000, 50))
+                     breaks = seq(0, 1000, 50)) +
+    facet_wrap(~gender)
 ```
 
 ***
@@ -125,7 +136,10 @@ qplot(x = friend_count, data = pf, binwidth = 10) +
 Notes:
 
 ```{r Omitting NA Values}
-
+qplot(x = friend_count, data = subset(pf, !is.na(gender)), binwidth = 10) +
+  scale_x_continuous(limits = c(0, 1000),
+                     breaks = seq(0, 1000, 50)) +
+    facet_wrap(~gender)
 ```
 
 ***
@@ -134,7 +148,7 @@ Notes:
 Notes:
 
 ```{r Statistics \'by\' Gender}
-
+by(pf$friend_count, pf$gender, summary)
 ```
 
 #### Who on average has more friends: men or women?
@@ -152,7 +166,8 @@ Response:
 Notes:
 
 ```{r Tenure}
-
+ggplot(aes(x = tenure), data = pf) + 
+    geom_histogram(binwidth = 30, color = 'black', fill = '#099DD9')
 ```
 
 ***
@@ -160,7 +175,9 @@ Notes:
 #### How would you create a histogram of tenure by year?
 
 ```{r Tenure Histogram by Year}
-
+ggplot(aes(x = tenure / 365), data = pf) + 
+    geom_histogram(binwidth = .25, color = 'black', fill = '#099DD9') +
+    scale_x_continuous(breaks = seq(1, 7, 1), limits = c(0,7))
 ```
 
 ***
@@ -169,7 +186,11 @@ Notes:
 Notes:
 
 ```{r Labeling Plots}
-
+ggplot(aes(x = tenure / 365), data = pf) +
+    xlab("Number of years using Facebook") +
+    ylab("Number of users in sample") +
+    geom_histogram(binwidth = .25, color = 'black', fill = '#099DD9') +
+    scale_x_continuous(breaks = seq(1, 7, 1), limits = c(0,7))
 ```
 
 ***
@@ -178,7 +199,18 @@ Notes:
 Notes:
 
 ```{r User Ages}
-
+ggplot(aes(x = age), data = pf) +
+    xlab("Age of users in sample") +
+    ylab("Number of users using Facebook") +
+    geom_histogram(binwidth = 1, color = 'black', fill = '#099DD9') +
+    scale_x_continuous(breaks = seq(10, 120, 10), limits = c(10,120))
+```
+```{r}
+ggplot(aes(x = age), data = pf) +
+    xlab("Age of users in sample") +
+    ylab("Number of users using Facebook") +
+    geom_histogram(binwidth = 2, color = 'black', fill = '#099DD9') +
+    scale_x_continuous(breaks = seq(10, 120, 10), limits = c(10,120))
 ```
 
 #### What do you notice?
@@ -205,7 +237,27 @@ Notes:
 Notes:
 
 ```{r Add a Scaling Layer}
+summary(pf$friend_count)
 
+summary(log10(pf$friend_count + 1))
+
+summary(sqrt(pf$friend_count))
+
+p1 <- ggplot(aes(x = friend_count), data = pf) +
+    geom_histogram(color = 'black', fill = '#099DD9')
+
+# p2 <- ggplot(aes(x = friend_count), data = pf) +
+#     geom_histogram(binwidth = 1, color = 'black', fill = '#099DD9') +
+#     scale_x_log10()
+# 
+# p3 <- ggplot(aes(x = friend_count), data = pf) +
+#     geom_histogram(binwidth = 1, color = 'black', fill = '#099DD9') +
+#     scale_x_sqrt()
+
+p2 <- p1 + scale_x_log10()
+p3 <- p1 + scale_x_sqrt()
+library("gridExtra")
+grid.arrange(p1, p2, p3)
 ```
 
 ***
@@ -214,8 +266,26 @@ Notes:
 ### Frequency Polygons
 
 ```{r Frequency Polygons}
-
+ggplot(aes(x = friend_count, y = ..count.. / sum(..count..)),
+       data = subset(pf, !is.na(gender))) +
+    geom_freqpoly(aes(color = gender), binwidth = 10) +
+    scale_x_continuous(limits = c(0, 1000), breaks = seq(0, 1000, 50)) +
+    xlab("Friend count") +
+    ylab("Proportion of users with that friend count")
 ```
+My notes:
+```{r}
+bp0 <- ggplot(aes(x = friend_count, y = ..count.. / sum(..count..)),
+       data = subset(pf, !is.na(gender))) +
+    geom_freqpoly(aes(color = gender), binwidth = 10) +
+    xlab("Friend count") +
+    ylab("Proportion of users with that friend count")
+
+bp1 <- bp0 + scale_x_continuous(limits = c(0, 1000), breaks = seq(0, 1000, 50))
+bp2 <- bp0 + scale_x_continuous(limits = c(300, 600), breaks = seq(0, 1000, 50))
+grid.arrange(bp1, bp2, ncol = 1)
+```
+
 
 ***
 
@@ -223,7 +293,9 @@ Notes:
 Notes:
 
 ```{r Likes on the Web}
-
+ggplot(aes(x = www_likes, y = ..density..), data = subset(pf, !is.na(gender))) +
+    geom_freqpoly(aes(color = gender), binwidth = .1) +
+    scale_x_log10()
 ```
 
 
